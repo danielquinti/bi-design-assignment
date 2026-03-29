@@ -5,28 +5,9 @@
 -- ==================================================================
 
 -- ==================================================================
--- Constula 1
--- Enunciado: ingresos totales y visualizaciones totales por género, país y año.
+-- Consulta 1
+-- Enunciado: ingresos totales y visualizaciones totales por género, país y año. Inlcuir todas las combinaciones posibles de subtotales entre estas dimensiones y el total general.
 -- ==================================================================
--- Parte de visualizaciones
-SELECT gender, country, year, count(fact_view.view_sk)
-FROM
-    fact_view INNER JOIN dim_viewer ON
-        fact_view.viewer_sk = dim_viewer.viewer_sk
-    INNER JOIN dim_date ON
-        fact_view.start_date_utc_sk = dim_date.date_sk
-GROUP BY CUBE(gender, country, year);
-
--- Parte de ingresos
-SELECT gender, country, year, sum(fact_interaction.revenue)
-FROM
-    fact_interaction INNER JOIN dim_viewer ON
-        fact_interaction.viewer_sk = dim_viewer.viewer_sk
-    INNER JOIN dim_date ON
-        fact_interaction.date_utc_sk = dim_date.date_sk
-GROUP BY CUBE(gender, country, year);
-
--- Combinación
 SELECT 
     gender, 
     country, 
@@ -34,12 +15,12 @@ SELECT
     SUM(total_vistas) AS num_vistas, 
     SUM(total_revenue) AS ingresos_totales
 FROM (
-    -- Parte 1: Recolectamos la actividad de visualización
+    -- Visualizacion
     SELECT 
         v.gender, 
         v.country, 
         d.year, 
-        1 AS total_vistas, -- Cada fila en Fact_View es 1 vista
+        1 AS total_vistas,
         0 AS total_revenue
     FROM fact_view fv
     INNER JOIN dim_viewer v ON fv.viewer_sk = v.viewer_sk
@@ -47,7 +28,7 @@ FROM (
     
     UNION ALL
     
-    -- Parte 2: Recolectamos la actividad de ingresos
+    -- Ingresos
     SELECT 
         v.gender, 
         v.country, 
@@ -64,9 +45,8 @@ ORDER BY year NULLS LAST, country NULLS LAST, gender NULLS LAST;
 
 -- ==================================================================
 -- Consulta 2
--- Enunciado: ingresos totales para cada combinación de género, país, año y tipo de interacción. Además mostrarlos en dos columnas: revenue_sub, revenue_cheer, revenue_sub.
+-- Enunciado: ingresos totales para cada combinación de género, país, año y tipo de interacción. Además mostrarlos en dos columnas: revenue_sub y revenue_cheer.
 -- ==================================================================
-
 SELECT
     gender,
     country,
@@ -91,7 +71,6 @@ PIVOT (
     )
 )
 ORDER BY year NULLS LAST, country NULLS LAST, gender NULLS LAST;
-
 
 
 
@@ -131,7 +110,7 @@ ORDER BY id_channel, date_utc_sk;
 
 -- ==================================================================
 -- Consulta 4
--- Enunciado: top 3 espectadores por tiempo de visualización en cada canal.
+-- Enunciado: mostrar top 3 espectadores por tiempo de visualización en cada canal.
 -- ==================================================================
 SELECT * FROM (
     SELECT 
@@ -154,7 +133,7 @@ ORDER BY id_channel, total_min DESC;
 
 -- ==================================================================
 -- Consulta 5
--- Enunciado: para cada espectador que alguna vez haya gastado en la plataforma mostrar el total gastado y asignarle un "customer tier" (1 a 4) en función de su gasto total.
+-- Enunciado: para cada espectador que alguna vez haya gastado dinero en la plataforma, mostrar el total gastado y asignarle un "customer tier" (1 a 4) en función de su gasto total.
 -- ==================================================================
 
 SELECT 
@@ -167,6 +146,7 @@ FROM
 GROUP BY dim_viewer.id_viewer
 HAVING SUM(fact_interaction.revenue) > 0
 ORDER BY total_spent DESC;
+
 
 
 -- ==================================================================
