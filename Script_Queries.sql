@@ -1,4 +1,10 @@
 -- ==================================================================
+-- ==================================================================
+-- Consultas a nivel de plataforma
+-- ==================================================================
+-- ==================================================================
+
+-- ==================================================================
 -- Constula 1
 -- Enunciado: ingresos totales y visualizaciones totales por género, país y año.
 -- ==================================================================
@@ -54,3 +60,47 @@ FROM (
 ) 
 GROUP BY CUBE(gender, country, year)
 ORDER BY year NULLS LAST, country NULLS LAST, gender NULLS LAST;
+
+
+-- ==================================================================
+-- Consulta 2
+-- Enunciado: ingresos totales para cada combinación de género, país, año y tipo de interacción. Además mostrarlos en dos columnas: revenue_sub, revenue_cheer, revenue_sub.
+-- ==================================================================
+
+SELECT
+    gender,
+    country,
+    year,
+    NVL(revenue_sub, 0) AS revenue_sub,
+    NVL(revenue_cheer, 0) AS revenue_cheer
+FROM (
+    SELECT gender, country, year, interaction_type, revenue
+    FROM
+        fact_interaction INNER JOIN dim_viewer ON
+            fact_interaction.viewer_sk = dim_viewer.viewer_sk
+        INNER JOIN dim_date ON
+            fact_interaction.date_utc_sk = dim_date.date_sk
+    WHERE interaction_type IN ('sub', 'cheer')
+    GROUP BY CUBE(gender, country, year), interaction_type, revenue
+)
+PIVOT (
+    SUM(revenue) 
+    FOR interaction_type IN (
+        'sub' AS revenue_sub, 
+        'cheer' AS revenue_cheer 
+    )
+)
+ORDER BY year NULLS LAST, country NULLS LAST, gender NULLS LAST;
+
+
+
+
+
+
+
+
+
+
+
+
+
