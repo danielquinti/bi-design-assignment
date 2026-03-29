@@ -95,12 +95,29 @@ ORDER BY year NULLS LAST, country NULLS LAST, gender NULLS LAST;
 
 
 
+-- ==================================================================
+-- ==================================================================
+-- Consultas a nivel de canal
+-- ==================================================================
+-- ==================================================================
 
+-- ==================================================================
+-- Consulta 3
+-- Enunciado: para cada canal mostrar:
+--              - Ingresos diarios.
+--              - Ingresos acumulados por día a lo largo del tiempo.
+--              - Ingresos en ventanas de 7 días.
+-- ==================================================================
 
-
-
-
-
-
-
+SELECT DISTINCT
+    dim_channel.channel_sk,
+    id_channel,
+    date_utc_sk,
+    SUM(fact_interaction.revenue) OVER (PARTITION BY dim_channel.channel_sk, date_utc_sk) AS ingreso_diario,
+    SUM(fact_interaction.revenue) OVER (PARTITION BY dim_channel.channel_sk ORDER BY date_utc_sk) AS total_ingresos,
+    SUM(fact_interaction.revenue) OVER (PARTITION BY dim_channel.channel_sk ORDER BY date_utc_sk ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING) AS ingresos_7_dias
+FROM 
+    fact_interaction
+    INNER JOIN dim_channel ON fact_interaction.channel_sk = dim_channel.channel_sk
+ORDER BY id_channel, date_utc_sk;
 
