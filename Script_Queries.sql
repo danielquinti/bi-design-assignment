@@ -139,9 +139,10 @@ SELECT * FROM (
         dim_viewer.id_viewer, 
         SUM(fact_view.duration_minutes) AS total_min,
         DENSE_RANK() OVER (PARTITION BY fact_view.channel_sk ORDER BY SUM(fact_view.duration_minutes) DESC) AS ranking
-    FROM fact_view
-    INNER JOIN dim_Channel ON fact_view.channel_sk = dim_Channel.channel_sk
-    INNER JOIN dim_Viewer ON fact_view.viewer_sk = dim_Viewer.viewer_sk
+    FROM 
+        fact_view
+        INNER JOIN dim_Channel ON fact_view.channel_sk = dim_Channel.channel_sk
+        INNER JOIN dim_Viewer ON fact_view.viewer_sk = dim_Viewer.viewer_sk
     GROUP BY 
         dim_channel.id_channel, 
         dim_viewer.id_viewer, 
@@ -149,3 +150,19 @@ SELECT * FROM (
 ) 
 WHERE ranking <= 3
 ORDER BY id_channel, total_min DESC;
+
+
+-- ==================================================================
+-- Consulta 5
+-- Enunciado: para cada espectador mostrar el total gastado en la plataforma y asignarle un "customer tier" (1 a 4) en función de su gasto total.
+-- ==================================================================
+
+SELECT 
+    dim_viewer.id_viewer, 
+    SUM(fact_interaction.revenue) AS total_spent,
+    NTILE(4) OVER  (ORDER BY SUM(fact_interaction.revenue) DESC) AS customer_tier
+FROM
+    fact_interaction
+    JOIN dim_viewer ON fact_interaction.viewer_sk = dim_viewer.viewer_sk
+GROUP BY dim_viewer.id_viewer
+ORDER BY total_spent DESC;
