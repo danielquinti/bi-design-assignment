@@ -160,7 +160,7 @@ ORDER BY id_channel, total_min DESC;
 SELECT 
     dim_viewer.id_viewer, 
     SUM(fact_interaction.revenue) AS total_spent,
-    NTILE(4) OVER  (ORDER BY SUM(fact_interaction.revenue) DESC) AS customer_tier
+    NTILE(4) OVER (ORDER BY SUM(fact_interaction.revenue) DESC) AS customer_tier
 FROM
     fact_interaction
     JOIN dim_viewer ON fact_interaction.viewer_sk = dim_viewer.viewer_sk
