@@ -90,8 +90,13 @@ CREATE TABLE Dim_Viewer_Channel_Role (
 -- 2. CREACIÓN. TABLAS DE APOYO (BRIDGE)
 -- =========================================================
 
+CREATE TABLE Dim_Activity_Group (
+    activity_group_sk NUMBER PRIMARY KEY,
+    group_name        VARCHAR2(100)
+);
+
 CREATE TABLE Bridge_Activity_Group (
-    activity_group_sk NUMBER, -- Se maneja externamente para agrupar
+    activity_group_sk NUMBER,
     activity_sk       NUMBER,
     weighting_factor  NUMBER(5, 4),
     PRIMARY KEY (activity_group_sk, activity_sk)
@@ -133,7 +138,7 @@ CREATE TABLE Fact_Interaction (
     time_local_sk       VARCHAR2(8),
     date_utc_sk         DATE,
     time_utc_sk         VARCHAR2(8),
-    interaction_type_sk VARCHAR2(8), -- follow, sub, cheer
+    interaction_type    VARCHAR2(10), -- follow, sub, cheer, unsub, unfollow
     revenue             NUMBER(19, 4)
 );
 
@@ -145,8 +150,7 @@ CREATE TABLE Fact_Interaction (
 ALTER TABLE Fact_View ADD CONSTRAINT fk_view_viewer FOREIGN KEY (viewer_sk) REFERENCES Dim_Viewer(viewer_sk);
 ALTER TABLE Fact_View ADD CONSTRAINT fk_view_channel FOREIGN KEY (channel_sk) REFERENCES Dim_Channel(channel_sk);
 ALTER TABLE Fact_View ADD CONSTRAINT fk_view_session FOREIGN KEY (session_sk) REFERENCES Dim_Streaming_Session(session_sk);
-ALTER TABLE Fact_View ADD CONSTRAINT fk_view_act_group FOREIGN KEY (activity_group_sk) -- Nota: Referencia a la PK compuesta de la Bridge si fuera necesario, pero usualmente apunta al SK de grupo
-    REFERENCES Bridge_Activity_Group(activity_group_sk);
+ALTER TABLE Fact_View ADD CONSTRAINT fk_view_act_group FOREIGN KEY (activity_group_sk) REFERENCES Dim_Activity_Group(activity_group_sk);
 
 -- Referencias Temporales (DATE y VARCHAR2)
 ALTER TABLE Fact_View ADD CONSTRAINT fk_view_date_start_loc FOREIGN KEY (start_date_local_sk) REFERENCES Dim_Date(date_sk);
@@ -183,7 +187,8 @@ ALTER TABLE Dim_Viewer_Channel_Role ADD CONSTRAINT fk_role_channel FOREIGN KEY (
 
 -- Bridge_Activity_Group
 ALTER TABLE Bridge_Activity_Group ADD CONSTRAINT fk_bridge_activity FOREIGN KEY (activity_sk) REFERENCES Dim_Activity(activity_sk);
--- DUDA: FKs de tabla bridge salen desde la bridge. Como tabla de hechos y tabla bridge están relacionadas, se puso a la tabla de hechos como dueña. Esto está bien? Debería de ser doble relación? (yo creo que así está bien)
+ALTER TABLE Bridge_Activity_Group ADD CONSTRAINT fk_bridge_group_fk FOREIGN KEY (activity_group_sk) REFERENCES Dim_Activity_Group(activity_group_sk);
+-- (Duda resuelta: Está bien así, Fact_View y Bridge apuntan ambas a Dim_Activity_Group para evitar dependencias circulares).
 
 
 -- =========================================================
