@@ -7,7 +7,7 @@ BEGIN
    FOR rec IN (SELECT table_name FROM user_tables) LOOP
       -- Ejecutar el comando DROP para cada tabla encontrada
       -- CASCADE CONSTRAINTS: Borra las claves foráneas que apuntan a esta tabla
-      -- PURGE: Borra la tabla definitivamente sin pasar por la papelera de reciclaje
+      -- PURGE: Borra la tabla definitivamente
       EXECUTE IMMEDIATE 'DROP TABLE "' || rec.table_name || '" CASCADE CONSTRAINTS PURGE';
    END LOOP;
    
@@ -188,7 +188,6 @@ ALTER TABLE Dim_Viewer_Channel_Role ADD CONSTRAINT fk_role_channel FOREIGN KEY (
 -- Bridge_Activity_Group
 ALTER TABLE Bridge_Activity_Group ADD CONSTRAINT fk_bridge_activity FOREIGN KEY (activity_sk) REFERENCES Dim_Activity(activity_sk);
 ALTER TABLE Bridge_Activity_Group ADD CONSTRAINT fk_bridge_group_fk FOREIGN KEY (activity_group_sk) REFERENCES Dim_Activity_Group(activity_group_sk);
--- (Duda resuelta: Está bien así, Fact_View y Bridge apuntan ambas a Dim_Activity_Group para evitar dependencias circulares).
 
 
 -- =========================================================
