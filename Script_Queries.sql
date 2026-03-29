@@ -121,3 +121,31 @@ FROM
     INNER JOIN dim_channel ON fact_interaction.channel_sk = dim_channel.channel_sk
 ORDER BY id_channel, date_utc_sk;
 
+
+
+-- ==================================================================
+-- ==================================================================
+-- Consultas a nivel de viewer
+-- ==================================================================
+-- ==================================================================
+
+-- ==================================================================
+-- Consulta 4
+-- Enunciado: top 3 espectadores por tiempo de visualización en cada canal.
+-- ==================================================================
+SELECT * FROM (
+    SELECT 
+        dim_channel.id_channel, 
+        dim_viewer.id_viewer, 
+        SUM(fact_view.duration_minutes) AS total_min,
+        DENSE_RANK() OVER (PARTITION BY fact_view.channel_sk ORDER BY SUM(fact_view.duration_minutes) DESC) AS ranking
+    FROM fact_view
+    INNER JOIN dim_Channel ON fact_view.channel_sk = dim_Channel.channel_sk
+    INNER JOIN dim_Viewer ON fact_view.viewer_sk = dim_Viewer.viewer_sk
+    GROUP BY 
+        dim_channel.id_channel, 
+        dim_viewer.id_viewer, 
+        fact_view.channel_sk
+) 
+WHERE ranking <= 3
+ORDER BY id_channel, total_min DESC;
