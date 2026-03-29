@@ -165,4 +165,33 @@ FROM
     fact_interaction
     JOIN dim_viewer ON fact_interaction.viewer_sk = dim_viewer.viewer_sk
 GROUP BY dim_viewer.id_viewer
+HAVING SUM(fact_interaction.revenue) > 0
 ORDER BY total_spent DESC;
+
+
+-- ==================================================================
+-- ==================================================================
+-- Consultas a nivel temático
+-- ==================================================================
+-- ==================================================================
+
+-- ==================================================================
+-- Consulta 6
+-- Enunciado: para cada tipo de juego analizar que combinación de género y país tiene mayor duración de visualizacion. Además analizarlo a nivel global con respecto al género. Mostrar el resultado en una tabla con las siguientes columnas: game, country, male, female, non_binary, other.
+-- ==================================================================
+
+SELECT
+    activity_name,
+    country,
+    gender,
+    SUM(fact_view.duration_minutes) as total_duration
+FROM
+    fact_view
+    INNER JOIN dim_activity ON fact_view.activity_sk = dim_activity.activity_sk
+
+
+
+
+
+
+
