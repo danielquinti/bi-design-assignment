@@ -154,7 +154,7 @@ ORDER BY id_channel, total_min DESC;
 
 -- ==================================================================
 -- Consulta 5
--- Enunciado: para cada espectador mostrar el total gastado en la plataforma y asignarle un "customer tier" (1 a 4) en función de su gasto total.
+-- Enunciado: para cada espectador que alguna vez haya gastado en la plataforma mostrar el total gastado y asignarle un "customer tier" (1 a 4) en función de su gasto total.
 -- ==================================================================
 
 SELECT 
@@ -181,17 +181,35 @@ ORDER BY total_spent DESC;
 -- ==================================================================
 
 SELECT
-    activity_name,
+    activity_name AS game,
     country,
-    gender,
-    SUM(fact_view.duration_minutes) as total_duration
-FROM
-    fact_view
-    INNER JOIN dim_activity ON fact_view.activity_sk = dim_activity.activity_sk
-
-
-
-
-
-
+    NVL(male, 0) AS male,
+    NVL(female, 0) AS female,
+    NVL(non_binary, 0) AS non_binary,
+    NVL(other, 0) AS other    
+FROM (
+    SELECT
+        dim_activity.activity_name,
+        dim_viewer.country,
+        dim_viewer.gender,
+        (fact_view.duration_minutes * bridge_activity_group.weighting_factor) AS duration
+    FROM
+        fact_view
+        INNER JOIN bridge_activity_group ON fact_view.activity_group_sk = bridge_activity_group.activity_group_sk
+        INNER JOIN dim_activity ON bridge_activity_group.activity_sk = dim_activity.activity_sk
+        INNER JOIN dim_viewer ON fact_view.viewer_sk = dim_viewer.viewer_sk
+    WHERE
+        dim_activity.activity_name != 'NO_APLICA'
+    GROUP BY 
+        GROUPING SETS (
+            (dim_viewer.country, dim_viewer.gender, dim_activity.activity_sk, dim_activity.activity_name, fact_view.duration_minutes, bridge_activity_group.weighting_factor), 
+            (dim_viewer.gender, dim_activity.activity_sk, dim_activity.activity_name, fact_view.duration_minutes, bridge_activity_group.weighting_factor)
+        )
+)
+PIVOT (
+    SUM(duration) FOR gender IN ('Male' AS male, 'Female' AS female, 'Non-Binary' AS non_binary, 'Other' AS other)
+)
+ORDER BY 
+    country NULLS FIRST, 
+    activity_name;
 
